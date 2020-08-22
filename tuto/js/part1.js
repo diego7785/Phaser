@@ -39,6 +39,9 @@ function preload (){
     //spritesheet es un grupo de imágenes dentro de una misma imagen, los tamaños corresponde a los tamaños de cada imagen a extraer 
     this.load.spritesheet('dude', './assets/dude.png', 
         {frameWidth: 32, frameHeight: 48});
+
+    this.load.spritesheet('enemy', './assets/enemy.png',
+        {frameWidth: 105, frameHeight: 82});
 }
 
 function create (){
@@ -74,6 +77,10 @@ function create (){
     //Para que el personaje choque cuando llegue a un borde
     player.setCollideWorldBounds(true);
 
+    enemy=this.physics.add.sprite(700,450,'enemy');
+    enemy.setBounce(0.2);
+    enemy.setCollideWorldBounds(true);
+
     //animando el personaje
     this.anims.create({
         key: 'left',
@@ -82,6 +89,13 @@ function create (){
         //la velocidad de muestra de los fotogramas es de 10fps
         frameRate: 10,
         //la animacion no se repite, una vez terminada debe volver a iniciarse
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'moveE',
+        frames: this.anims.generateFrameNumbers('enemy', { start: 0, end: 1}),
+        frameRate: 5,
         repeat: -1
     });
 
@@ -101,9 +115,11 @@ function create (){
 
     //añade efectos de gravedad en el eje Y al personaje (peso del objeto)
     player.body.setGravityY(300); 
+    enemy.body.setGravityY(300);
 
     //añade que el personaje colisione con las plataformas y el suelo, para que no las traspase
     this.physics.add.collider(player,platforms);
+    this.physics.add.collider(enemy,platforms);
 
     //listener de eventos del teclado
     cursors = this.input.keyboard.createCursorKeys();
@@ -124,6 +140,12 @@ function create (){
 
     //colision estrellas plataformas
     this.physics.add.collider(stars,platforms);
+
+
+    //movimientos del enemigo
+    enemy.setVelocityX(-60);
+
+    enemy.anims.play('moveE', true);
 
     //verificacion de colision o superpocision de personaje y estrellas para recogerlas
     this.physics.add.overlap(player,stars,collectStar,null,this);
@@ -160,6 +182,7 @@ function create (){
 
     //al momento de la colision se ejecuta otra funcion
     this.physics.add.collider(player,bombs,hitBomb, null, this);
+    this.physics.add.collider(player,enemy,hitEnemy,null,this);
 
     function hitBomb(player,bombs){
         this.physics.pause(); //pausa el juego
@@ -167,9 +190,26 @@ function create (){
         player.anims.play('turn');
         gameOverText = this.add.text((dimensiones.ancho/4)-140,dimensiones.alto/4,'GAME OVER', {fontSize: '64px', fill: '#000000'})
     }
+
+    function hitEnemy(player,enemy){
+        this.physics.pause(); //pausa el juego
+        player.setTint(0xff0000); //pinta el personaje de color rojo
+        player.anims.play('turn');
+        gameOverText = this.add.text((dimensiones.ancho/4)-140,dimensiones.alto/4,'GAME OVER', {fontSize: '64px', fill: '#000000'})
+    }
+
+
 }
 
 function update (){
+
+    //al chocar el enemigo con la pared
+    if(enemy.x === 100){
+        enemy.setVelocityX(60);
+    } else if(enemy.x === 702){
+        enemy.setVelocityX(-60);
+    }
+
     //relacion de eventos y animacion
     if(cursors.left.isDown){
         player.setVelocityX(-160);
