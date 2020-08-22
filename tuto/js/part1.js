@@ -16,6 +16,9 @@ var config = {
         preload: preload,
         create: create,
         update: update
+    },
+    audio: {
+        disableWebAudio: true
     }
 };
 
@@ -42,6 +45,12 @@ function preload (){
 
     this.load.spritesheet('enemy', './assets/enemy.png',
         {frameWidth: 105, frameHeight: 82});
+
+    //cargando audios
+    this.load.audio('coin', './assets/audio/coin.mp3')
+    this.load.audio('gameover', './assets/audio/gameover.mp3')
+
+    this.load.image('restart', './assets/restart.png');
 }
 
 function create (){
@@ -64,6 +73,11 @@ function create (){
     platforms.create(600, 400, 'ground');
     platforms.create(50, 250, 'ground');
     platforms.create(750, 220, 'ground');
+
+    //CREANDO AUDIOS
+
+    coin = this.sound.add('coin', { loop: false });
+    gameover = this.sound.add('gameover', { loop: false });
 
     //CREANDO JUGADOR
     
@@ -153,6 +167,7 @@ function create (){
     //funcion para recoger las estrellas
     function collectStar(player,star){
         star.disableBody(true,true); //desaparece la estrella
+        coin.play();
 
         score +=10;
         scoreText.setText('Score: '+score);
@@ -176,6 +191,15 @@ function create (){
     //posicion, texto, estilo del texto
     scoreText = this.add.text(16,16,'score: 0', {fontSize: '32px', fill: '#000000'})
 
+    //boton de reinicio
+    const restartI = this.add.image(650, 30,'restart');
+
+    restartI.setInteractive();
+
+    restartI.on('pointerover', () => {restartI.setTint(0xff0000)});
+    restartI.on('pointerout', () => {restartI.clearTint()});
+    restartI.on('pointerdown', () => {location.reload()});
+
     //añadiendo bombas
     bombs = this.physics.add.group();
     this.physics.add.collider(bombs,platforms);
@@ -185,6 +209,7 @@ function create (){
     this.physics.add.collider(player,enemy,hitEnemy,null,this);
 
     function hitBomb(player,bombs){
+        gameover.play();
         this.physics.pause(); //pausa el juego
         player.setTint(0xff0000); //pinta el personaje de color rojo
         player.anims.play('turn');
@@ -192,6 +217,7 @@ function create (){
     }
 
     function hitEnemy(player,enemy){
+        gameover.play();
         this.physics.pause(); //pausa el juego
         player.setTint(0xff0000); //pinta el personaje de color rojo
         player.anims.play('turn');
